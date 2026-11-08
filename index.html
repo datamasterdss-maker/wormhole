@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -134,7 +134,7 @@
             </div>
         </div>
 
-        <!-- Mini 360° Tube Cross-Section Radar (Explicit 38x38px so it cannot stretch to 100vw!) -->
+        <!-- Mini 360° Tube Cross-Section Radar -->
         <div class="hud-glass px-2 py-1 rounded-lg flex items-center gap-1.5 pointer-events-auto">
             <canvas id="radar-canvas" width="38" height="38" style="width: 38px; height: 38px; display: block;" class="rounded-full bg-slate-950 border border-cyan-400/50"></canvas>
             <div class="hidden xl:block text-[10px] leading-tight text-cyan-300">
@@ -204,14 +204,14 @@
 
     <!-- OPENING START SCREEN -->
     <div id="screen-start" class="screen-overlay">
-        <div class="max-w-2xl mx-4 p-6 sm:p-8 hud-glass rounded-2xl text-center border-2 border-cyan-400/60">
+        <div class="max-w-2xl mx-4 p-5 sm:p-7 hud-glass rounded-2xl text-center border-2 border-cyan-400/60 max-h-[94vh] overflow-y-auto">
             <div class="text-xs uppercase tracking-widest text-amber-300 font-bold mb-1">COTS 3D Locomotive Physics Edition • Version 2</div>
-            <h1 class="text-3xl sm:text-5xl font-black text-cyan-300 glow-text mb-3 uppercase">WORMHOLE RUN: GATE BREACHER</h1>
-            <p class="text-sm sm:text-base text-cyan-100 mb-4 leading-relaxed">
+            <h1 class="text-2xl sm:text-4xl font-black text-cyan-300 glow-text mb-2 uppercase">WORMHOLE RUN: GATE BREACHER</h1>
+            <p class="text-xs sm:text-sm text-cyan-100 mb-3 leading-relaxed">
                 Ride your heavy flying motorcycle 360° around the zero-gravity wireframe wormhole while pursued by 2 interceptor bikes!
-                Collect <span class="text-amber-300 font-bold">Golden Rings & Orbs</span> to build your <span class="text-amber-300 font-bold">Score Multiplier</span>, dodge <span class="text-red-400 font-bold">Fighter Jet Bombs</span> and the overhead <span class="text-orange-400 font-bold">Wireframe Cyber-Dragon's Fire</span>, jump over <span class="text-fuchsia-400 font-bold">Wormhole Breach Holes</span>, and hit <span class="text-emerald-300 font-bold">160+ u/s</span> to smash through the <span class="text-cyan-300 font-bold">Thick Glass Security Door</span> and liberate the Domed City!
+                Collect <span class="text-amber-300 font-bold">Golden Rings & Orbs</span> to build your <span class="text-amber-300 font-bold">Score Multiplier</span>, dodge <span class="text-red-400 font-bold">Fighter Jet Bombs</span> and the overhead <span class="text-orange-400 font-bold">Wireframe Cyber-Dragon's Fire</span>, jump over <span class="text-fuchsia-400 font-bold">Wormhole Breach Holes</span>, and hit <span class="text-emerald-300 font-bold">160+ u/s</span> to smash through the <span class="text-cyan-300 font-bold">Thick Glass Security Door</span>!
             </p>
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-left text-xs bg-slate-900/80 p-3 rounded-xl border border-cyan-500/30 mb-5">
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-left text-xs bg-slate-900/80 p-2.5 rounded-xl border border-cyan-500/30 mb-3">
                 <div><strong class="text-amber-300">W / ↑ :</strong> Accelerate</div>
                 <div><strong class="text-amber-300">S / ↓ :</strong> Brakes</div>
                 <div><strong class="text-amber-300">A/D or ←/→ :</strong> 360° Wall Steer</div>
@@ -219,7 +219,21 @@
                 <div><strong class="text-amber-300">Spacebar :</strong> Zero-G Jump</div>
                 <div><strong class="text-amber-300">C / E / K :</strong> Cam / EMP / Keys</div>
             </div>
-            <button id="btn-start" type="button" class="px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black rounded-xl text-lg uppercase tracking-wider shadow-lg shadow-cyan-500/30 transition transform hover:scale-105 cursor-pointer">
+
+            <!-- LEADERBOARD UI -->
+            <div id="leaderboard-display" class="mb-3 bg-slate-950/85 p-3 rounded-xl border-2 border-amber-500/50 text-sm shadow-[0_0_15px_rgba(245,158,11,0.25)]">
+                <div class="text-amber-400 font-black mb-1.5 uppercase tracking-widest text-center text-xs sm:text-sm">🏆 Top 3 Hall of Fame 🏆</div>
+                <ul id="leaderboard-list" class="text-left space-y-1 max-w-sm mx-auto text-xs sm:text-sm">
+                    <li class="text-center text-cyan-300/70 py-1">Loading Hall of Fame...</li>
+                </ul>
+            </div>
+
+            <!-- NAME INPUT -->
+            <div class="mb-4 max-w-sm mx-auto">
+                <input type="text" id="player-name" placeholder="ENTER PILOT NAME" maxlength="14" class="w-full bg-slate-900/90 border-2 border-cyan-500/50 rounded-xl px-4 py-2 text-cyan-300 font-black text-center uppercase tracking-wider focus:outline-none focus:border-cyan-300 focus:shadow-[0_0_15px_rgba(34,211,238,0.4)] placeholder-cyan-700 transition">
+            </div>
+
+            <button id="btn-start" type="button" class="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black rounded-xl text-base sm:text-lg uppercase tracking-wider shadow-lg shadow-cyan-500/30 transition transform hover:scale-105 cursor-pointer">
                 Launch Cycle Into Wormhole
             </button>
         </div>
@@ -265,6 +279,137 @@
         </div>
     </div>
 
+    <!-- DREAMLO GLOBAL LEADERBOARD INTEGRATION (WITH HTTPS PROXY & LOCAL BACKUP) -->
+    <script>
+        const DREAMLO_PRIVATE = "YWX2h65k40-pEjkRXfeX5AiCgAF5xVvUaZPO8nu6FLjw";
+        const DREAMLO_PUBLIC = "6aefcfb28f40bb08a4cbe400";
+        const LOCAL_STORAGE_KEY = "wormhole_v2_hall_of_fame";
+
+        window.leaderboardData = [];
+
+        function getLocalScores() {
+            try {
+                const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveLocalScore(name, score) {
+            try {
+                const list = getLocalScores();
+                const existingIdx = list.findIndex(item => item.name.toUpperCase() === name.toUpperCase());
+                if (existingIdx >= 0) {
+                    list[existingIdx].score = Math.max(list[existingIdx].score, score);
+                } else {
+                    list.push({ name, score });
+                }
+                list.sort((a, b) => b.score - a.score);
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list.slice(0, 10)));
+            } catch (e) {}
+        }
+
+        function mergeAndSortScores(remoteList, localList) {
+            const map = new Map();
+            [...localList, ...remoteList].forEach(entry => {
+                if (!entry || !entry.name) return;
+                const cleanName = String(entry.name).replace(/-/g, ' ').trim().toUpperCase();
+                const val = parseInt(entry.score, 10) || 0;
+                if (val > 0) {
+                    const prev = map.get(cleanName) || 0;
+                    if (val > prev) map.set(cleanName, val);
+                }
+            });
+            return Array.from(map.entries())
+                .map(([name, score]) => ({ name, score }))
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 3);
+        }
+
+        window.updateLeaderboardUI = function() {
+            const list = document.getElementById('leaderboard-list');
+            if (!list) return;
+
+            list.innerHTML = '';
+            if (!window.leaderboardData || window.leaderboardData.length === 0) {
+                list.innerHTML = '<li class="text-center text-cyan-300/80 py-1">No scores recorded yet — launch a run to claim #1!</li>';
+                return;
+            }
+
+            window.leaderboardData.forEach((entry, i) => {
+                const li = document.createElement('li');
+                li.className = "flex justify-between items-center border-b border-cyan-500/30 pb-1 pt-1 last:border-0";
+                li.innerHTML = `<span class="text-cyan-100 font-bold"><span class="text-amber-400 mr-2">#${i + 1}</span>${entry.name}</span><span class="text-amber-300 font-black glow-text-gold">${entry.score.toLocaleString()}</span>`;
+                list.appendChild(li);
+            });
+        };
+
+        // Free Dreamlo uses HTTP; routing through an HTTPS CORS relay prevents Mixed-Content/SSL errors on GitHub Pages
+        async function fetchViaHttpsRelay(targetHttpUrl) {
+            const relays = [
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(targetHttpUrl)}`,
+                `https://corsproxy.io/?${encodeURIComponent(targetHttpUrl)}`
+            ];
+            for (const relayUrl of relays) {
+                try {
+                    const res = await fetch(relayUrl, { cache: 'no-store' });
+                    if (res.ok) {
+                        return await res.text();
+                    }
+                } catch (err) {
+                    // Try next relay silently
+                }
+            }
+            return null;
+        }
+
+        window.saveScore = async function(name, score) {
+            const numericScore = Math.round(Number(score) || 0);
+            if (numericScore <= 0) return;
+
+            const cleanName = (name || 'UNKNOWN PILOT').trim().toUpperCase();
+            saveLocalScore(cleanName, numericScore);
+            window.leaderboardData = mergeAndSortScores(window.leaderboardData, getLocalScores());
+            window.updateLeaderboardUI();
+
+            const safeDreamloName = encodeURIComponent(cleanName.replace(/\s+/g, '-').replace(/\*/g, ''));
+            const addUrl = `http://dreamlo.com/lb/${DREAMLO_PRIVATE}/add/${safeDreamloName}/${numericScore}?t=${Date.now()}`;
+            await fetchViaHttpsRelay(addUrl);
+            await fetchLeaderboard();
+        };
+
+        async function fetchLeaderboard() {
+            const localScores = getLocalScores();
+            window.leaderboardData = mergeAndSortScores([], localScores);
+            window.updateLeaderboardUI();
+
+            if (!DREAMLO_PUBLIC) return;
+            const jsonUrl = `http://dreamlo.com/lb/${DREAMLO_PUBLIC}/json?t=${Date.now()}`;
+            const rawText = await fetchViaHttpsRelay(jsonUrl);
+            if (!rawText) return;
+
+            try {
+                const data = JSON.parse(rawText);
+                let remoteScores = [];
+                if (data && data.dreamlo && data.dreamlo.leaderboard && data.dreamlo.leaderboard.entry) {
+                    let entries = data.dreamlo.leaderboard.entry;
+                    if (!Array.isArray(entries)) entries = [entries];
+                    remoteScores = entries.map(e => ({
+                        name: String(e.name || '').replace(/-/g, ' '),
+                        score: parseInt(e.score, 10) || 0
+                    }));
+                }
+                window.leaderboardData = mergeAndSortScores(remoteScores, getLocalScores());
+                window.updateLeaderboardUI();
+            } catch (e) {
+                // Keep local merged leaderboard displayed cleanly
+            }
+        }
+
+        fetchLeaderboard();
+    </script>
+
     <script>
         // ============================================================================
         // 1. PROCEDURAL WEB AUDIO SYNTHESIZER (COTS Sound Effects)
@@ -293,9 +438,7 @@
                     if (this.ctx && this.ctx.state === 'suspended') {
                         this.ctx.resume();
                     }
-                } catch (err) {
-                    console.warn('Audio init skipped:', err);
-                }
+                } catch (err) {}
             },
             updateEngine(speed, turbo, active) {
                 if (!this.ctx || !this.engineGain) return;
@@ -426,13 +569,13 @@
         // ============================================================================
         const TUBE_LENGTH = 10000;
         const TUBE_RADIUS = 30;
-        const BREACH_MIN_SPEED = 160; // Minimum speed to smash through the Reinforced Glass Security Door
+        const BREACH_MIN_SPEED = 160;
 
         const PHYSICS = {
             maxSpeed: 215,
             turboMaxSpeed: 295,
-            cruiseSpeed: 95,        // Self-sustaining minimum cruise speed when rolling so cycle always moves!
-            acceleration: 75,       // Heavy locomotive build-up
+            cruiseSpeed: 95,
+            acceleration: 75,
             turboAccel: 145,
             braking: 115,
             passiveDrag: 14,
@@ -455,7 +598,6 @@
         let internalStreaks = [];
         let empWaves = [];
 
-        // Camera Modes: 0 = Chase, 1 = Cockpit/First-Person, 2 = Overhead Bird's Eye, 3 = Side Profile
         const CAMERA_MODES = ['CHASE', 'COCKPIT', 'OVERHEAD', 'SIDE'];
         let currentCamIndex = 0;
 
@@ -553,7 +695,6 @@
             createDomedCityAndGate();
             createJetAndDragonAssets();
 
-            // Place motorcycle and camera inside the wormhole right away so the background is crisp and live
             syncBikeAndCameraPose();
             drawTubeRadar();
 
@@ -822,22 +963,18 @@
             scene.add(targetRing);
             jetEvent.targetRing = targetRing;
 
-            // Detailed Wireframe Cyber-Dragon (Oriented so +Z faces target and fire blasts along +Z)
             const dragonGroup = new THREE.Group();
             const dMat = new THREE.MeshBasicMaterial({ color: 0xff5500, wireframe: true });
             const dGoldMat = new THREE.MeshBasicMaterial({ color: 0xfacc15, wireframe: true });
             const dCoreMat = new THREE.MeshBasicMaterial({ color: 0xff2200, wireframe: true });
 
-            // Serpentine Spine & Ribcage
             const torso = new THREE.Mesh(new THREE.CylinderGeometry(5.5, 3.2, 28, 10, 6), dMat);
             torso.rotation.x = Math.PI / 2;
             dragonGroup.add(torso);
 
-            // Glowing Inner Dragon Core
             const innerCore = new THREE.Mesh(new THREE.OctahedronGeometry(4.5, 1), dCoreMat);
             dragonGroup.add(innerCore);
 
-            // Dragon Neck & Horned Skull pointing toward +Z (lookAt direction)
             const headGroup = new THREE.Group();
             const skull = new THREE.Mesh(new THREE.ConeGeometry(5.2, 14, 6), dGoldMat);
             skull.rotation.x = Math.PI / 2;
@@ -854,7 +991,6 @@
             headGroup.position.set(0, 0, 16);
             dragonGroup.add(headGroup);
 
-            // Articulated Wireframe Wings
             const leftWing = new THREE.Group();
             const lWingFrame = new THREE.Mesh(new THREE.BoxGeometry(44, 1.2, 18), dGoldMat);
             lWingFrame.position.set(-22, 0, 0);
@@ -867,7 +1003,6 @@
             rightWing.add(rWingFrame);
             rightWing.position.set(4, 2, 2);
 
-            // Spiked Wireframe Tail
             const tail = new THREE.Mesh(new THREE.ConeGeometry(2.8, 22, 6), dMat);
             tail.rotation.x = -Math.PI / 2;
             tail.position.set(0, 0, -24);
@@ -876,10 +1011,9 @@
             dragonGroup.userData = { leftWing, rightWing };
             dragonGroup.add(leftWing, rightWing);
 
-            // Searing Wireframe Fire Breath Stream (Projects from jaws at +Z=22 down to the wormhole wall)
             const fireGroup = new THREE.Group();
-            const fireOuterGeo = new THREE.ConeGeometry(13, 64, 16, 8, true);
-            fireOuterGeo.translate(0, -32, 0);
+            const fireOuterGeo = new THREE.ConeGeometry(8.5, 42, 16, 8, true);
+            fireOuterGeo.translate(0, -21, 0);
             fireOuterGeo.rotateX(-Math.PI / 2);
             const fireOuterMat = new THREE.MeshBasicMaterial({
                 color: 0xff3300,
@@ -889,8 +1023,8 @@
             });
             const fireOuter = new THREE.Mesh(fireOuterGeo, fireOuterMat);
 
-            const fireInnerGeo = new THREE.ConeGeometry(7.5, 64, 12, 6, true);
-            fireInnerGeo.translate(0, -32, 0);
+            const fireInnerGeo = new THREE.ConeGeometry(4.8, 42, 12, 6, true);
+            fireInnerGeo.translate(0, -21, 0);
             fireInnerGeo.rotateX(-Math.PI / 2);
             const fireInnerMat = new THREE.MeshBasicMaterial({
                 color: 0xfacc15,
@@ -910,7 +1044,6 @@
             scene.add(dragonGroup);
             dragonEvent.dragonMesh = dragonGroup;
 
-            // Glowing Scorch Target Ring on the Wormhole Wall where Dragonfire hits
             const fireRing = new THREE.Mesh(
                 new THREE.RingGeometry(7.5, 12.5, 24),
                 new THREE.MeshBasicMaterial({ color: 0xff4500, side: THREE.DoubleSide, wireframe: true })
@@ -931,7 +1064,6 @@
             collectibles.forEach(c => scene.remove(c.mesh));
             collectibles = [];
 
-            // 1. Spawn 3 Pop-Up Spatial Obstacles
             for (let i = 0; i < 3; i++) {
                 const t = 0.18 + i * 0.25 + Math.random() * 0.06;
                 const angle = Math.random() * Math.PI * 2;
@@ -946,7 +1078,6 @@
                 obstacles.push({ mesh, t, angle, pos, popped: false, nearMissed: false });
             }
 
-            // 2. Spawn 3 Wide-Arc Wormhole Breach Holes
             for (let i = 0; i < 3; i++) {
                 const riftGroup = new THREE.Group();
                 const t = 0.23 + i * 0.25 + Math.random() * 0.05;
@@ -979,7 +1110,6 @@
                 rifts.push({ mesh: riftGroup, t, angle: centerAngle, angularHalfWidth, pos: centerPos, nearMissed: false });
             }
 
-            // 3. Spawn Golden Hyper-Rings & Emerald Nanite Orbs
             for (let i = 0; i < 14; i++) {
                 const t = 0.08 + (i / 14) * 0.84;
                 const angle = (i * 1.1) % (Math.PI * 2);
@@ -1228,6 +1358,9 @@
             const powerBonus = Math.round(playerStats.power * 35 * playerStats.multiplier);
             const totalScore = Math.round(playerStats.score + timeBonus + powerBonus);
 
+            const pName = document.getElementById('player-name').value.trim().toUpperCase() || 'UNKNOWN PILOT';
+            if (window.saveScore) window.saveScore(pName, totalScore);
+
             document.getElementById('score-speed').textContent = `${Math.round(playerStats.speed)} u/s`;
             document.getElementById('score-time').textContent = `+${timeBonus} (${playerStats.runTime.toFixed(1)}s)`;
             document.getElementById('score-power').textContent = `+${powerBonus} (${Math.round(playerStats.power)}%)`;
@@ -1242,6 +1375,9 @@
             gameState = 'GAMEOVER';
             SFX.updateEngine(0, false, false);
             SFX.playHit();
+
+            const pName = document.getElementById('player-name').value.trim().toUpperCase() || 'UNKNOWN PILOT';
+            if (window.saveScore && playerStats.score > 0) window.saveScore(pName, Math.round(playerStats.score));
 
             const titleEl = document.getElementById('end-title');
             const descEl = document.getElementById('end-desc');
@@ -1291,7 +1427,6 @@
 
             playerStats.runTime += dt;
 
-            // 1. Locomotive Forward Acceleration, Self-Sustaining Cruise, & Braking
             const maxSpd = keys.turbo ? PHYSICS.turboMaxSpeed : PHYSICS.maxSpeed;
             if (keys.turbo) {
                 playerStats.speed += PHYSICS.turboAccel * dt;
@@ -1300,7 +1435,6 @@
             } else if (keys.down) {
                 playerStats.speed -= PHYSICS.braking * dt;
             } else {
-                // Smoothly settle toward locomotive cruise speed (95 u/s) so the motorcycle is always moving forward
                 if (playerStats.speed > PHYSICS.cruiseSpeed) {
                     playerStats.speed = Math.max(PHYSICS.cruiseSpeed, playerStats.speed - PHYSICS.passiveDrag * dt);
                 } else {
@@ -1309,10 +1443,8 @@
             }
             playerStats.speed = Math.max(25, Math.min(maxSpd, playerStats.speed));
 
-            // Advance along spline
             playerStats.t += (playerStats.speed * dt) / TUBE_LENGTH;
 
-            // 2. Corrected 360° Zero-Gravity Wall Steering
             if (keys.left) {
                 playerStats.angularVel -= PHYSICS.angularAccel * dt;
             } else if (keys.right) {
@@ -1323,7 +1455,6 @@
             playerStats.angularVel = Math.max(-PHYSICS.maxAngularSpeed, Math.min(PHYSICS.maxAngularSpeed, playerStats.angularVel));
             playerStats.angle += playerStats.angularVel * dt;
 
-            // 3. Zero-G Radial Jump
             if (keys.jump && playerStats.jumpOffset === 0) {
                 playerStats.jumpVel = PHYSICS.jumpVelocity;
                 SFX.playJump();
@@ -1337,7 +1468,6 @@
                 }
             }
 
-            // Check Arrival at Thick Glass Security Door (t >= 0.992)
             if (playerStats.t >= 0.992) {
                 playerStats.t = 0.992;
                 if (playerStats.speed >= BREACH_MIN_SPEED) {
@@ -1406,7 +1536,6 @@
 
             const time = clock.getElapsedTime();
 
-            // 1. Update Antagonist Pursuers & Laser Fire
             enemies.forEach((enemy, idx) => {
                 const desiredT = Math.max(0.001, playerStats.t - (0.011 + idx * 0.004));
                 enemy.t += (desiredT - enemy.t) * 3.5 * dt;
@@ -1428,7 +1557,6 @@
                 }
             });
 
-            // 2. Update Enemy Lasers
             for (let i = lasers.length - 1; i >= 0; i--) {
                 const l = lasers[i];
                 l.t += l.speedT * dt;
@@ -1453,7 +1581,6 @@
                 }
             }
 
-            // 3. Pop-Up Obstacles
             for (let obs of obstacles) {
                 const distT = obs.t - playerStats.t;
                 if (!obs.popped && distT < 0.08 && distT > -0.01) {
@@ -1476,7 +1603,6 @@
                 }
             }
 
-            // 4. Spatial Rifts (Anti-Spin Wormhole Breach Holes)
             for (let rift of rifts) {
                 if (Math.abs(playerStats.t - rift.t) < 0.012) {
                     const angleDiff = Math.abs(Math.atan2(Math.sin(playerStats.angle - rift.angle), Math.cos(playerStats.angle - rift.angle)));
@@ -1497,7 +1623,6 @@
                 }
             }
 
-            // 5. Collectibles (Golden Rings & Nanite Orbs with Rising Multiplier!)
             for (let col of collectibles) {
                 if (col.collected) continue;
                 col.mesh.rotation.z += 2.5 * dt;
@@ -1618,13 +1743,15 @@
                     dragonEvent.triggersRemaining.shift();
                     dragonEvent.active = true;
                     dragonEvent.timer = 0;
+                    dragonEvent.targetT = Math.min(0.95, playerStats.t + 0.042);
                     dragonEvent.targetAngle = playerStats.angle;
                     dragonEvent.dragonMesh.visible = true;
+                    dragonEvent.fireCone.visible = false;
                     dragonEvent.fireTargetRing.visible = true;
                     SFX.playDragonRoar();
 
                     const alertEl = document.getElementById('alert-banner');
-                    alertEl.textContent = '🔥 WARNING: OVERHEAD WIREFRAME DRAGON FIRE BLAST!';
+                    alertEl.textContent = '🔥 WARNING: OVERHEAD WIREFRAME DRAGON FIRE BLAST AHEAD!';
                     alertEl.classList.remove('hidden');
                 }
             }
@@ -1632,47 +1759,44 @@
             if (dragonEvent.active) {
                 dragonEvent.timer += dt;
 
-                // Keep the dragon hovering ahead of the player and slightly above the ceiling in direct camera view
-                const breathT = Math.min(0.97, playerStats.t + 0.011);
                 const center = new THREE.Vector3();
                 const tangent = new THREE.Vector3();
-                const wallNorm = new THREE.Vector3();
-                const strikePos = getTubeWallPosition(breathT, dragonEvent.targetAngle, PHYSICS.wallOffset, center, tangent, null, null, wallNorm);
+                const strikeWallNorm = new THREE.Vector3();
+                const strikePos = getTubeWallPosition(dragonEvent.targetT, dragonEvent.targetAngle, PHYSICS.wallOffset, center, tangent, null, null, strikeWallNorm);
 
-                // Position the dragon outside the opposite (overhead) wireframe ceiling relative to the player's camera up vector
-                const playerUp = new THREE.Vector3();
-                getTubeWallPosition(playerStats.t, playerStats.angle, PHYSICS.wallOffset, null, null, null, null, playerUp);
-
-                const dragonPos = center.clone()
-                    .addScaledVector(playerUp, TUBE_RADIUS + 18)
-                    .addScaledVector(tangent, 16);
+                const dragonPos = center.clone().addScaledVector(strikeWallNorm, TUBE_RADIUS + 20);
 
                 dragonEvent.dragonMesh.position.copy(dragonPos);
                 dragonEvent.dragonMesh.up.copy(tangent);
                 dragonEvent.dragonMesh.lookAt(strikePos);
 
-                // Position scorch ring on the wormhole floor where the fire stream penetrates
                 dragonEvent.fireTargetRing.position.copy(strikePos);
-                dragonEvent.fireTargetRing.lookAt(strikePos.clone().add(wallNorm));
+                dragonEvent.fireTargetRing.lookAt(strikePos.clone().add(strikeWallNorm));
                 dragonEvent.fireTargetRing.rotation.z += 6 * dt;
 
-                // Flap wings and spin dual-layer wireframe fire cone
+                if (dragonEvent.timer >= 0.55) {
+                    dragonEvent.fireCone.visible = true;
+                }
+
                 const flap = Math.sin(time * 10) * 0.52;
                 dragonEvent.dragonMesh.userData.leftWing.rotation.z = flap;
                 dragonEvent.dragonMesh.userData.rightWing.rotation.z = -flap;
                 dragonEvent.fireCone.rotation.z += 12 * dt;
 
-                // Check if player is caught in the scorching fire zone (narrowed hit angle for precise dodging)
-                const angleDiff = Math.abs(Math.atan2(Math.sin(playerStats.angle - dragonEvent.targetAngle), Math.cos(playerStats.angle - dragonEvent.targetAngle)));
-                if (dragonEvent.timer > 1.1 && angleDiff < 0.22) {
+                const distToFire = playerGroup.position.distanceTo(strikePos);
+                if (dragonEvent.fireCone.visible && Math.abs(playerStats.t - dragonEvent.targetT) < 0.0065 && distToFire < 7.2) {
                     dragonEvent.fireTargetRing.visible = false;
                     gameOver('dragon');
                     return;
                 }
 
-                if (dragonEvent.timer >= dragonEvent.duration) {
+                if (playerStats.t > dragonEvent.targetT + 0.014 || dragonEvent.timer >= 6.0) {
+                    if (playerStats.t > dragonEvent.targetT + 0.014) {
+                        addBonusPoints(450, 'DRAGONFIRE DODGED!');
+                    }
                     dragonEvent.active = false;
                     dragonEvent.dragonMesh.visible = false;
+                    dragonEvent.fireCone.visible = false;
                     dragonEvent.fireTargetRing.visible = false;
                     document.getElementById('alert-banner').classList.add('hidden');
                 }
@@ -1743,6 +1867,14 @@
         // ============================================================================
         function setupInputListeners() {
             const handleKey = (e, isDown) => {
+                // Allow typing inside the Pilot Name box without triggering game hotkeys
+                if (document.activeElement && document.activeElement.id === 'player-name') {
+                    if (e.key === 'Enter' && isDown && gameState === 'START') {
+                        startGame();
+                    }
+                    return;
+                }
+
                 const code = e.code || '';
                 const key = (e.key || '').toLowerCase();
 
@@ -1780,7 +1912,6 @@
             window.addEventListener('keydown', (e) => handleKey(e, true), { passive: false });
             window.addEventListener('keyup', (e) => handleKey(e, false), { passive: false });
 
-            // UI Buttons
             document.getElementById('btn-start').addEventListener('click', startGame);
             document.getElementById('btn-retry').addEventListener('click', startGame);
             document.getElementById('btn-play-again').addEventListener('click', startGame);
@@ -1800,7 +1931,6 @@
                 e.currentTarget.blur();
             });
 
-            // Mobile / On-Screen Touch Bindings
             const bindHold = (id, keyName) => {
                 const btn = document.getElementById(id);
                 const start = (ev) => { ev.preventDefault(); keys[keyName] = true; };
@@ -1840,7 +1970,6 @@
             const dt = Math.min(clock.getDelta(), 0.05);
 
             if (gameState === 'START') {
-                // Gently preview the wormhole on the title screen so the 3D scene is crisp and visible
                 playerStats.angle += 0.25 * dt;
                 syncBikeAndCameraPose();
             } else if (gameState === 'PLAYING') {
