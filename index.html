@@ -1354,7 +1354,10 @@
             document.getElementById('letterbox-top').classList.remove('letterbox-active');
             document.getElementById('letterbox-bottom').classList.remove('letterbox-active');
 
-            const timeBonus = Math.max(500, Math.round(6000 - playerStats.runTime * 75));
+            // Time-Trial Scaling: Blazing fast runs get massive bonuses. 
+            // Crawling past ~78 seconds drops the time bonus to 0, countering the slow-ball strategy.
+            const timeBonus = Math.max(0, Math.round(7000 - (playerStats.runTime * 90)));
+            
             const powerBonus = Math.round(playerStats.power * 35 * playerStats.multiplier);
             const totalScore = Math.round(playerStats.score + timeBonus + powerBonus);
 
