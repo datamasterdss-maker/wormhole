@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -348,7 +348,7 @@
         // Free Dreamlo uses HTTP; routing through an HTTPS CORS relay prevents Mixed-Content/SSL errors on GitHub Pages
         async function fetchViaHttpsRelay(targetHttpUrl) {
             const relays = [
-                `https://api.allorigins.win/raw?url=${encodeURIComponent(targetHttpUrl)}`,
+                `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetHttpUrl)}`,
                 `https://corsproxy.io/?${encodeURIComponent(targetHttpUrl)}`
             ];
             for (const relayUrl of relays) {
