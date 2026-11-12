@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -279,10 +279,10 @@
         </div>
     </div>
 
-    <!-- DREAMLO GLOBAL LEADERBOARD INTEGRATION (DIRECT HTTPS & LOCAL BACKUP) -->
+    <!-- PERSONAL TOP 3 HALL OF FAME + DIRECT GOOGLE SHEET WEBHOOK -->
     <script>
-        const DREAMLO_PRIVATE = "YWX2h65k40-pEjkRXfeX5AiCgAF5xVvUaZPO8nu6FLjw";
-        const DREAMLO_PUBLIC = "6aefcfb28f40bb08a4cbe400";
+        // GOOGLE APPS SCRIPT '/exec' WEBHOOK URL:
+        const GOOGLE_SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbw6oVeCAVr99CnUVNu3KHx1PlZ0sr3SyxUGOgP0pcgNHK5NkOUGxpQYbVNWwDEeNrVh/exec";
         const LOCAL_STORAGE_KEY = "wormhole_v2_hall_of_fame";
 
         window.leaderboardData = [];
@@ -299,32 +299,13 @@
         function saveLocalScore(name, score) {
             try {
                 const list = getLocalScores();
-                const existingIdx = list.findIndex(item => item.name.toUpperCase() === name.toUpperCase());
-                if (existingIdx >= 0) {
-                    list[existingIdx].score = Math.max(list[existingIdx].score, score);
-                } else {
-                    list.push({ name, score });
-                }
+                list.push({ name, score });
                 list.sort((a, b) => b.score - a.score);
-                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list.slice(0, 10)));
+                // Keep top 3 personal scores on this machine
+                const top3 = list.slice(0, 3);
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(top3));
+                window.leaderboardData = top3;
             } catch (e) {}
-        }
-
-        function mergeAndSortScores(remoteList, localList) {
-            const map = new Map();
-            [...localList, ...remoteList].forEach(entry => {
-                if (!entry || !entry.name) return;
-                const cleanName = String(entry.name).replace(/-/g, ' ').trim().toUpperCase();
-                const val = parseInt(entry.score, 10) || 0;
-                if (val > 0) {
-                    const prev = map.get(cleanName) || 0;
-                    if (val > prev) map.set(cleanName, val);
-                }
-            });
-            return Array.from(map.entries())
-                .map(([name, score]) => ({ name, score }))
-                .sort((a, b) => b.score - a.score)
-                .slice(0, 3);
         }
 
         window.updateLeaderboardUI = function() {
@@ -333,7 +314,7 @@
 
             list.innerHTML = '';
             if (!window.leaderboardData || window.leaderboardData.length === 0) {
-                list.innerHTML = '<li class="text-center text-cyan-300/80 py-1">No scores recorded yet — launch a run to claim #1!</li>';
+                list.innerHTML = '<li class="text-center text-cyan-300/80 py-1">No personal scores yet — launch a run to claim #1!</li>';
                 return;
             }
 
@@ -345,59 +326,38 @@
             });
         };
 
-        window.saveScore = async function(name, score) {
+        window.saveScore = function(name, score) {
             const numericScore = Math.round(Number(score) || 0);
             if (numericScore <= 0) return;
 
             const cleanName = (name || 'UNKNOWN PILOT').trim().toUpperCase();
+
+            // 1. Update Personal Top 3 on the student's machine immediately
             saveLocalScore(cleanName, numericScore);
-            window.leaderboardData = mergeAndSortScores(window.leaderboardData, getLocalScores());
             window.updateLeaderboardUI();
 
-            const safeDreamloName = encodeURIComponent(cleanName.replace(/\s+/g, '-').replace(/\*/g, ''));
-            // Note the "https" and the "fetch" configuration
-            const addUrl = `https://www.dreamlo.com/lb/${DREAMLO_PRIVATE}/add/${safeDreamloName}/${numericScore}?t=${Date.now()}`;
-            
-            try {
-                await fetch(addUrl, { mode: 'no-cors', cache: 'no-store' });
-            } catch (e) {
-                console.error("Score upload failed", e);
-            }
-            
-            await fetchLeaderboard();
+            // 2. Push score directly to master Google Sheet via Webhook
+            if (!GOOGLE_SHEET_WEBHOOK_URL || GOOGLE_SHEET_WEBHOOK_URL.includes("PASTE_YOUR")) return;
+
+            const runSeconds = (typeof playerStats !== 'undefined' && playerStats.runTime) ? Number(playerStats.runTime.toFixed(1)) : 0;
+            const payload = {
+                name: cleanName,
+                score: numericScore,
+                time: runSeconds,
+                tag: (typeof gameState !== 'undefined' && gameState === 'WIN') ? 'BREACHED' : 'WIPED OUT'
+            };
+
+            fetch(GOOGLE_SHEET_WEBHOOK_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            }).catch(err => console.error("Sheet sync error:", err));
         };
 
-        async function fetchLeaderboard() {
-            const localScores = getLocalScores();
-            window.leaderboardData = mergeAndSortScores([], localScores);
-            window.updateLeaderboardUI();
-
-            if (!DREAMLO_PUBLIC) return;
-            const jsonUrl = `https://www.dreamlo.com/lb/${DREAMLO_PUBLIC}/json?t=${Date.now()}`;
-            
-            try {
-                const res = await fetch(jsonUrl, { cache: 'no-store' });
-                if (!res.ok) return;
-                const rawText = await res.text();
-                
-                const data = JSON.parse(rawText);
-                let remoteScores = [];
-                if (data && data.dreamlo && data.dreamlo.leaderboard && data.dreamlo.leaderboard.entry) {
-                    let entries = data.dreamlo.leaderboard.entry;
-                    if (!Array.isArray(entries)) entries = [entries];
-                    remoteScores = entries.map(e => ({
-                        name: String(e.name || '').replace(/-/g, ' '),
-                        score: parseInt(e.score, 10) || 0
-                    }));
-                }
-                window.leaderboardData = mergeAndSortScores(remoteScores, getLocalScores());
-                window.updateLeaderboardUI();
-            } catch (e) {
-                // Keep local merged leaderboard displayed cleanly
-            }
-        }
-
-        fetchLeaderboard();
+        // Load player's personal Top 3 on startup
+        window.leaderboardData = getLocalScores().slice(0, 3);
+        window.updateLeaderboardUI();
     </script>
 
     <script>
@@ -533,7 +493,7 @@
                     subGain.gain.setValueAtTime(0.18, this.ctx.currentTime);
                     subGain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 1.45);
                     sub.connect(subGain);
-                    subGain.connect(this.ctx.destination);
+                    sub.connect(this.ctx.destination);
                     sub.start();
                     sub.stop(this.ctx.currentTime + 1.5);
 
