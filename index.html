@@ -279,7 +279,7 @@
         </div>
     </div>
 
-    <!-- DREAMLO GLOBAL LEADERBOARD INTEGRATION (WITH HTTPS PROXY & LOCAL BACKUP) -->
+    <!-- DREAMLO GLOBAL LEADERBOARD INTEGRATION (DIRECT HTTPS & LOCAL BACKUP) -->
     <script>
         const DREAMLO_PRIVATE = "YWX2h65k40-pEjkRXfeX5AiCgAF5xVvUaZPO8nu6FLjw";
         const DREAMLO_PUBLIC = "6aefcfb28f40bb08a4cbe400";
@@ -345,25 +345,6 @@
             });
         };
 
-        // Free Dreamlo uses HTTP; routing through an HTTPS CORS relay prevents Mixed-Content/SSL errors on GitHub Pages
-        async function fetchViaHttpsRelay(targetHttpUrl) {
-            const relays = [
-                `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetHttpUrl)}`,
-                `https://corsproxy.io/?${encodeURIComponent(targetHttpUrl)}`
-            ];
-            for (const relayUrl of relays) {
-                try {
-                    const res = await fetch(relayUrl, { cache: 'no-store' });
-                    if (res.ok) {
-                        return await res.text();
-                    }
-                } catch (err) {
-                    // Try next relay silently
-                }
-            }
-            return null;
-        }
-
         window.saveScore = async function(name, score) {
             const numericScore = Math.round(Number(score) || 0);
             if (numericScore <= 0) return;
@@ -374,8 +355,15 @@
             window.updateLeaderboardUI();
 
             const safeDreamloName = encodeURIComponent(cleanName.replace(/\s+/g, '-').replace(/\*/g, ''));
-            const addUrl = `http://dreamlo.com/lb/${DREAMLO_PRIVATE}/add/${safeDreamloName}/${numericScore}?t=${Date.now()}`;
-            await fetchViaHttpsRelay(addUrl);
+            // Note the "https" and the "fetch" configuration
+            const addUrl = `https://www.dreamlo.com/lb/${DREAMLO_PRIVATE}/add/${safeDreamloName}/${numericScore}?t=${Date.now()}`;
+            
+            try {
+                await fetch(addUrl, { mode: 'no-cors', cache: 'no-store' });
+            } catch (e) {
+                console.error("Score upload failed", e);
+            }
+            
             await fetchLeaderboard();
         };
 
@@ -385,11 +373,13 @@
             window.updateLeaderboardUI();
 
             if (!DREAMLO_PUBLIC) return;
-            const jsonUrl = `http://dreamlo.com/lb/${DREAMLO_PUBLIC}/json?t=${Date.now()}`;
-            const rawText = await fetchViaHttpsRelay(jsonUrl);
-            if (!rawText) return;
-
+            const jsonUrl = `https://www.dreamlo.com/lb/${DREAMLO_PUBLIC}/json?t=${Date.now()}`;
+            
             try {
+                const res = await fetch(jsonUrl, { cache: 'no-store' });
+                if (!res.ok) return;
+                const rawText = await res.text();
+                
                 const data = JSON.parse(rawText);
                 let remoteScores = [];
                 if (data && data.dreamlo && data.dreamlo.leaderboard && data.dreamlo.leaderboard.entry) {
